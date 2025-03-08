@@ -69,6 +69,23 @@ contract BattleTest is Test {
         assertEq(battle.getCharacterWealth(PLAYER), wealthSent);
     }
 
+    function testEraseCharacter() fundedPlayer public {
+        battle.joinBattle{value: INITIAL_PAYMENT}(CHARACTER_NAME);
+        uint256 initialUserBalance = address(PLAYER).balance;
+        uint256 characterWealth = battle.getCharacterWealth(address(PLAYER));
+        uint256 expectedEndUserBalance = initialUserBalance + characterWealth;
+
+        vm.startPrank(PLAYER);
+        battle.eraseCharacter();
+
+        uint256 realEndUserBalance = address(PLAYER).balance;
+        assertEq(realEndUserBalance, expectedEndUserBalance);
+
+        vm.expectRevert(Battle.Battle_AddressDoesntHaveCharacter.selector);
+        battle.getCharacterName(address(PLAYER));
+        vm.stopPrank();
+    }
+
     modifier fundedPlayer {
         vm.prank(PLAYER);
         vm.deal(PLAYER, INITIAL_USER_BALANCE);

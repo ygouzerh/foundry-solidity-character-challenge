@@ -60,22 +60,21 @@ contract Battle {
         characters[msg.sender] = newCharacter;
     }
 
-    // function eraseCharacter() external {
-    //     if (bytes(characters[msg.sender].name).length == 0) {
-    //         revert Battle_AddressDoesntHaveCharacter();
-    //     }
-    //     (bool sentSuccessfully, ) = payable(msg.sender).call{value: address(this).balance-characters[msg.sender].wealth}("");
-    //     require(sentSuccessfully, Battle_PaymentFailed());
-    // }
+    function eraseCharacter() external {
+        withdrawWealth();
+        delete characters[msg.sender];
+    }
 
-    function withdrawWealth() external {
+    function withdrawWealth() checkCharacterExists(msg.sender) public {
         if (bytes(characters[msg.sender].name).length == 0) {
             revert Battle_AddressDoesntHaveCharacter();
         }
         uint256 wealthToSent = characters[msg.sender].wealth;
         characters[msg.sender].wealth = 0;
         (bool sentSuccessfully, ) = payable(msg.sender).call{value: wealthToSent}("");
-        require(sentSuccessfully, Battle_PaymentFailed());
+        if (!sentSuccessfully) {
+            revert Battle_PaymentFailed();
+        }
     }
 
     function getCharacterName(address _address) checkCharacterExists(_address) public view returns (string memory) {
